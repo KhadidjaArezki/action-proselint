@@ -1,0 +1,68 @@
+name: "Proselint"
+author: "Khadidja Arezki"
+description: "GitHub action for proselint"
+inputs:
+  #additional_files:
+  #description: "A space separated list of additional filename to check"
+  #required: false
+  #default: ""
+  check_together:
+    description: "Run proselint on _all_ files at once, instead of one at a time"
+    required: false
+    default: ""
+outputs:
+  files:
+    description: A list of files with issues
+    value: ${{ steps.filepaths.outputs.filepaths }}
+  options:
+    description: The options used
+    value: ${{ steps.options.outputs.options }}
+branding:
+    icon: "terminal"
+    color: "gray-dark"
+runs:
+  using: "composite"
+  steps:
+    - name: install proselint
+    shell: bash
+    run: |
+      npm install proselint
+
+    - name: Gather base file paths
+      shell: bash
+      id: filepaths
+      run: |
+        declare -a filepaths
+        shebangregex="^#! */[^ ]*/(env *)?[abk]*sh"
+        for path in $(find . -name "*.md" -type f);do
+          filepaths+=("$file");
+        done
+        echo "::set-output name=filepaths::${filepaths[@]}"
+
+    - name: Run the linter
+      id: lint
+      shell: bash
+      run: |
+        statuscode=0
+        if [[ -n "${{ inputs.check_together }}" ]]; then
+          "${{ github.action_path }}/proselint" \
+          ${{ steps.options.outputs.options }} \
+          ${{ steps.filepaths.outputs.filepaths }} || statuscode=$?
+        else
+          for file in ${{ steps.filepaths.outputs.filepaths }}; do
+            echo "::debug::Checking $file"
+            "${{ github.action_path }}/proselint" \
+            ${{ steps.options.outputs.options }} \
+            "$file" || statuscode=$?;
+          done
+        fi
+        echo "::set-output name=statuscode::$statuscode"
+    - name: Print information
+      shell: bash
+      run: |
+        echo "Files: ${{steps.filepaths.outputs.filepaths}}"
+        #echo "Excluded: ${{ steps.exclude.outputs.excludes }}"
+        echo "Options: ${{ steps.options.outputs.options }}"
+        echo "Status code: ${{steps.check.outputs.statuscode}}"
+        exit ${{steps.check.outputs.statuscode}}
+    
