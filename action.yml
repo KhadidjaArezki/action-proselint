@@ -14,9 +14,6 @@ outputs:
   files:
     description: A list of files with issues
     value: ${{ steps.filepaths.outputs.filepaths }}
-  options:
-    description: The options used
-    value: ${{ steps.options.outputs.options }}
 branding:
     icon: "terminal"
     color: "gray-dark"
@@ -26,7 +23,7 @@ runs:
     - name: install proselint
       shell: bash
       run: |
-        pip install proselint
+        sudo apt install python3-proselint
 
     - name: Gather base file paths
       shell: bash
@@ -34,8 +31,9 @@ runs:
       run: |
         declare -a filepaths
         shebangregex="^#! */[^ ]*/(env *)?[abk]*sh"
-        for path in $(find . -name "*.md" -type f);do
+        for file in $(find . -name "*.md" -type f);do
           filepaths+=("$file");
+          echo "$file"
         done
         echo "::set-output name=filepaths::${filepaths[@]}"
 
@@ -46,13 +44,11 @@ runs:
         statuscode=0
         if [[ -n "${{ inputs.check_together }}" ]]; then
           "${{ github.action_path }}/proselint" \
-          ${{ steps.options.outputs.options }} \
           ${{ steps.filepaths.outputs.filepaths }} || statuscode=$?
         else
           for file in ${{ steps.filepaths.outputs.filepaths }}; do
             echo "::debug::Checking $file"
             "${{ github.action_path }}/proselint" \
-            ${{ steps.options.outputs.options }} \
             "$file" || statuscode=$?;
           done
         fi
@@ -61,8 +57,6 @@ runs:
       shell: bash
       run: |
         echo "Files: ${{steps.filepaths.outputs.filepaths}}"
-        #echo "Excluded: ${{ steps.exclude.outputs.excludes }}"
-        echo "Options: ${{ steps.options.outputs.options }}"
         echo "Status code: ${{steps.lint.outputs.statuscode}}"
         exit ${{steps.lint.outputs.statuscode}}
     
