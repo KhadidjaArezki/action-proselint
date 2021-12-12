@@ -43,12 +43,12 @@ runs:
       run: |
         statuscode=0
         if [[ -n "${{ inputs.check_together }}" ]]; then
-          "${{ github.action_path }}/proselint" \
+          "/usr/bin/python3-proselint" \
           ${{ steps.filepaths.outputs.filepaths }} || statuscode=$?
         else
           for file in ${{ steps.filepaths.outputs.filepaths }}; do
             echo "::debug::Checking $file"
-            "${{ github.action_path }}/proselint" \
+            /usr/bin/python3-proselint" \
             "$file" || statuscode=$?;
           done
         fi
