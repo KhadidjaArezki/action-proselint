@@ -24,9 +24,9 @@ runs:
   using: "composite"
   steps:
     - name: install proselint
-    shell: bash
-    run: |
-      npm install proselint
+      shell: bash
+      run: |
+        npm install proselint
 
     - name: Gather base file paths
       shell: bash
@@ -63,6 +63,6 @@ runs:
         echo "Files: ${{steps.filepaths.outputs.filepaths}}"
         #echo "Excluded: ${{ steps.exclude.outputs.excludes }}"
         echo "Options: ${{ steps.options.outputs.options }}"
-        echo "Status code: ${{steps.check.outputs.statuscode}}"
-        exit ${{steps.check.outputs.statuscode}}
+        echo "Status code: ${{steps.lint.outputs.statuscode}}"
+        exit ${{steps.lint.outputs.statuscode}}
     
